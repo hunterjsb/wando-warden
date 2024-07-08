@@ -8,3 +8,4 @@ for terminal in terminals:
     for camera in terminal.cameras:
         print(f"CAMERA FULLNAME {camera.full_name}")
         camera.get()
+        camera.save_last()

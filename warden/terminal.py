@@ -1,5 +1,5 @@
 from warden.utils import to_snake_case
-from warden.memory import Memory, LocalPhotoMemory
+from warden.memory import Memory
 
 from typing import List, Optional
 import io
@@ -34,6 +34,11 @@ class Camera:
             image = image.convert('RGB')
         self.last_image = image
         return image
+
+    def save_last(self):
+        if not self.last_image:
+            raise AttributeError("missing last image, cannot save")
+        self.memory.save(self.last_image, self.full_name+'.jpg')
 
 
 class Terminal:
