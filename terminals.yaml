@@ -1,0 +1,11 @@
+terminals:
+  - name: Wando Welch Terminal Inbound Lanes
+    cameras:
+      - name: Main Gate Inbound
+        url: https://scspa.com/wp-content/uploads/camera-maingate.jpg
+      - name: Shipping Lane Inbound
+        url: https://scspa.com/wp-content/uploads/camera-shippinglane.jpg
+  - name: North Charleston Terminal
+    cameras:
+      - name: Main Gate
+        url: https://scspa.com/wp-content/uploads/nct-maingate.jpg
