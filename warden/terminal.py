@@ -38,7 +38,7 @@ class Camera:
     def save_last(self):
         if not self.last_image:
             raise AttributeError("missing last image, cannot save")
-        self.memory.save(self.last_image, self.full_name+'.jpg')
+        self.memory.save(self.last_image, self.full_name)
 
 
 class Terminal:
