@@ -32,10 +32,8 @@ class Terminal:
 
 
 def load_terminals(yaml_file: str) -> List[Terminal]:
-    import yaml
-
     with open(yaml_file, 'r') as file:
-        data = yaml.safe_load(file)
+        data = load(file, Loader)
 
     terminals = []
     for terminal_data in data['terminals']:
