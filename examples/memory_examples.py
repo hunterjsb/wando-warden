@@ -17,3 +17,23 @@ def local_jpg():
         photo_memory.load("non_existent.jpg")
     except FileNotFoundError as e:
         print(f"Error: {e}")
+
+
+def s3_jpg():
+    from warden.memory import S3PhotoMemory
+    from PIL import Image
+
+    # Initialize the S3PhotoMemory
+    s3_memory = S3PhotoMemory('wando-warden', region_name='us-east-1')
+
+    # Save an image
+    image = Image.open('example.jpg')
+    s3_memory.save(image, 'example.jpg')
+
+    # Load an image
+    loaded_image = s3_memory.load('peep.jpg')
+    loaded_image.show()
+
+
+if __name__ == '__main__':
+    s3_jpg()
