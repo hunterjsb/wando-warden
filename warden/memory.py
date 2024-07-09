@@ -7,6 +7,7 @@ T = TypeVar('T')
 
 
 class Memory(ABC, Generic[T]):
+    """Base class, implement save and load for different ways to persist data"""
     @abstractmethod
     def save(self, obj: T, name: str) -> None:
         pass
@@ -17,6 +18,7 @@ class Memory(ABC, Generic[T]):
 
 
 class LocalPhotoMemory(Memory[Image.Image]):
+    """Save and load images to the local filesystem"""
     def __init__(self, directory: str):
         self.directory = directory
         os.makedirs(directory, exist_ok=True)
@@ -34,23 +36,3 @@ class LocalPhotoMemory(Memory[Image.Image]):
             raise FileNotFoundError(f"No file found at {file_path}")
 
         return Image.open(file_path)
-
-
-# Usage example
-if __name__ == "__main__":
-    from PIL import Image
-
-    # Create a sample image
-    sample_image = Image.new('RGB', (100, 100), color='red')
-
-    # Initialize the LocalPhotoMemory
-    photo_memory = LocalPhotoMemory("../images")
-    photo_memory.save(sample_image, "red_square")
-    loaded_image = photo_memory.load("red_square.jpg")
-    loaded_image.show()
-
-    # You can also try loading a non-existent image to see the error handling
-    try:
-        photo_memory.load("non_existent.jpg")
-    except FileNotFoundError as e:
-        print(f"Error: {e}")

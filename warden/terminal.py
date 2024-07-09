@@ -1,6 +1,5 @@
-from warden.utils import to_snake_case
 from warden.memory import Memory
-from warden.ocr import extract_timestamp
+from warden.ocr import extract_timestamp, to_snake_case
 
 from typing import List, Optional
 import io
@@ -18,6 +17,7 @@ except ImportError:
 
 
 class Camera:
+    """A camera stationed at a specific Terminal"""
     def __init__(self, name: str, url: str, terminal: 'Terminal', timestamp_box: tuple[int, int, int, int]):
         self.name = name
         self.url = url
@@ -31,13 +31,16 @@ class Camera:
 
     @property
     def full_name(self) -> str:
+        """Snake-cased camera name that includes the port, often used for filenames"""
         return to_snake_case(self.terminal.name + ' ' + self.name)
 
     @property
     def timestamp_box(self):
+        """The timestamp on the image, usually in the bottom-left corner"""
         return self.last_image.crop(self._timestamp_box)
 
     def get(self) -> Image.Image:
+        """Get the most recent image from the Camera"""
         resp = requests.get(self.url)
         resp.raise_for_status()
         image = Image.open(io.BytesIO(resp.content))
@@ -47,6 +50,7 @@ class Camera:
         return image
 
     def save_last(self, with_timestamp=True):
+        """Save the `last_image` to memory"""
         if not self.last_image:
             raise AttributeError("missing last image, cannot save")
 
@@ -63,6 +67,7 @@ class Camera:
 
 
 class Terminal:
+    """A Terminal, like Wando or HLT, which might have multiple cameras"""
     def __init__(self, name: str, memory: Memory):
         self.name = name
         self.cameras: List[Camera] = []
@@ -75,6 +80,7 @@ class Terminal:
 
 
 def load_terminals(yaml_file: str, memory: Memory) -> List[Terminal]:
+    """Load in the terminal configurations from a yaml file"""
     with open(yaml_file, 'r') as file:
         data = load(file, Loader)
 
