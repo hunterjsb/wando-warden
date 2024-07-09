@@ -1,6 +1,6 @@
-# Warden Camera Management System
+# Warden Terminal Camera Truck Detection
 
-Warden is a Python-based camera management system designed to capture, store, and process images from multiple cameras across different terminals. It supports both local storage and Amazon S3 for image persistence.****
+wando-warden can watch terminal cameras (such as those at Wando Welch), read the timestamp from the image, and counts the number of trucks.
 
 ## Installation
 
@@ -25,16 +25,19 @@ Warden is a Python-based camera management system designed to capture, store, an
 
 1. Edit the `terminals.yaml` file to configure your terminals and cameras.
 
-2. Set up environment variables for sensitive information:
-   - For local storage: `LOCAL_STORAGE_PATH`
-   - For S3 storage: `S3_BUCKET_NAME`, `AWS_REGION`
+2. Set up environment variables for sensitive information. See .env.example.
 
 ## Usage
 
+Run the streamlit app dashboard with:
+```commandline
+streamlit run app.py
+```
+
 Run the main script with the following command:
 
-```
-python -m warden --terminals path/to/terminals.yaml --storage [local|s3] --log-level [DEBUG|INFO|WARNING|ERROR|CRITICAL]
+```commandline
+python -m warden --detect-trucks
 ```
 
 ### Arguments
@@ -42,22 +45,23 @@ python -m warden --terminals path/to/terminals.yaml --storage [local|s3] --log-l
 - `--terminals`: Path to the YAML file containing terminal configurations (default: '../terminals.yaml')
 - `--storage`: Choose between 'local' or 's3' storage (default: 's3')
 - `--log-level`: Set the logging level (default: 'INFO')
+- `--db`: Database to store object detection results (default: ')
 
-### Examples
+### CLI Examples
 
-1. Run with default settings (S3 storage):
+1. Run with default settings (S3 for photos, DynamoDB for results):
    ```
    python -m warden
    ```
 
-2. Use local storage and debug logging:
+2. Use local photo storage and debug logging:
    ```
    python -m warden --storage local --log-level DEBUG
    ```
 
-3. Specify a different terminals file:
+3. Detect trucks and store the results in a postgresql db:
    ```
-   python -m warden --terminals /path/to/my/terminals.yaml
+   python -m warden --db postgres --detect-trucks
    ```
    
 ### Truck Detection
@@ -84,32 +88,7 @@ The Warden system now supports multiple database options for storing truck detec
 To specify the database type, use the `--db` flag:
 `python -m warden --detect-trucks --db [sqlite|mysql|postgres|dynamodb]`
 
-For each database type, you need to set the following environment variables:
-
-- SQLite:
-  - `SQLITE_DB_PATH`: Path to the SQLite database file (default: `truck_detections.db`)
-
-- MySQL:
-  - `MYSQL_HOST`: MySQL server host (default: `localhost`)
-  - `MYSQL_USER`: MySQL username
-  - `MYSQL_PASSWORD`: MySQL password
-  - `MYSQL_DATABASE`: MySQL database name (default: `warden`)
-
-- PostgreSQL:
-  - `POSTGRES_HOST`: PostgreSQL server host (default: `localhost`)
-  - `POSTGRES_USER`: PostgreSQL username
-  - `POSTGRES_PASSWORD`: PostgreSQL password
-  - `POSTGRES_DATABASE`: PostgreSQL database name (default: `warden`)
-
-- DynamoDB:
-  - `DYNAMODB_TABLE`: DynamoDB table name (default: `truck_detections`)
-  - `AWS_REGION`: AWS region for DynamoDB (default: `us-east-1`)
-
-Make sure to install the required dependencies for the database you choose:
-
-- MySQL: `pip install mysql-connector-python`
-- PostgreSQL: `pip install psycopg2-binary`
-- DynamoDB: `pip install boto3` (already required for S3 and Rekognition)
+For each database type, you need to set the appropriate environment variables, the names are found in .env.example.
 
 Note: For DynamoDB, ensure that you have the necessary AWS permissions and credentials set up.
 
@@ -120,6 +99,8 @@ To extend or modify the Warden system:
 1. Add new camera types in `terminal.py`
 2. Implement new storage backends in `memory.py`
 3. Enhance OCR capabilities in `ocr.py`
+4. Adjust labels and object detection settings in `detection.py`
+5. Edit default configuration values in `config.py`
 
 ## License
 
