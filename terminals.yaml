@@ -7,8 +7,8 @@ terminals:
       - name: Shipping Lane
         url: https://scspa.com/wp-content/uploads/camera-shippinglane.jpg
         timestamp_box: [0, 1380, 490, 1450]
-#  - name: North Charleston
-#    cameras:
-#      - name: Main Gate
-#        url: https://scspa.com/wp-content/uploads/nct-maingate.jpg
-#        timestamp_box: [0, 1030, 400, 1080]  # fuck this stupid timestamp
+  - name: North Charleston
+    cameras:
+      - name: Main Gate
+        url: https://scspa.com/wp-content/uploads/nct-maingate.jpg
+        timestamp_box: [0, 1030, 400, 1080]  # fuck this stupid timestamp

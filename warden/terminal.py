@@ -1,12 +1,15 @@
 from warden.utils import to_snake_case
 from warden.memory import Memory
+from warden.ocr import extract_timestamp
 
 from typing import List, Optional
 import io
+from datetime import datetime
 
 import requests
 from PIL import Image
 from yaml import load
+import pytz
 try:
     from yaml import CLoader as Loader, CDumper as Dumper
 except ImportError:
@@ -20,7 +23,9 @@ class Camera:
         self.url = url
         self.terminal = terminal
         self.memory = terminal.memory
+
         self.last_image: Optional[Image.Image] = None
+        self.last_timestamp: Optional[str] = None
 
         self._timestamp_box = timestamp_box  # coordinates are left, upper, right, bottom (PIL crop)
 
@@ -41,10 +46,20 @@ class Camera:
         self.last_image = image
         return image
 
-    def save_last(self):
+    def save_last(self, with_timestamp=True):
         if not self.last_image:
             raise AttributeError("missing last image, cannot save")
-        self.memory.save(self.last_image, self.full_name)
+
+        ts = 'latest'
+        if with_timestamp:
+            try:
+                ts = extract_timestamp(self.timestamp_box).replace(' ', '_')
+            except ValueError as e:
+                print(e)
+                est = pytz.timezone('US/Eastern')
+                ts = datetime.now(est).strftime('%Y-%m-%d_%H:%M:%S_approx')
+            self.last_timestamp = ts
+        self.memory.save(self.last_image, f"{self.full_name}_{ts}")
 
 
 class Terminal:

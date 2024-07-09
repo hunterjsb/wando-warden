@@ -9,4 +9,5 @@ for terminal in terminals:
     print(f"Terminal: {terminal.name}")
     for camera in terminal.cameras:
         camera.get()
-        print(f"CAMERA {camera.full_name}; ts {extract_timestamp(camera.timestamp_box)}\n")
+        camera.save_last(with_timestamp=True)
+        print(f"CAMERA {camera.full_name}; ts {camera.last_timestamp}\n")
