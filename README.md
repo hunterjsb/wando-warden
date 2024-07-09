@@ -4,6 +4,10 @@ wando-warden can watch terminal cameras (such as those at Wando Welch), read the
 
 ![wando-maingate](https://github.com/hunterjsb/wando-warden/assets/69213737/9e76295c-f2f1-4e44-8978-61d2d6dfbbe1)
 
+## Features
+- OCR (pytesseract) to extract timestamps
+- AI object detection using AWS Rekognition
+- Flexible storage options
 
 ## Installation
 
