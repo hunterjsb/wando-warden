@@ -55,7 +55,7 @@ class Camera:
             try:
                 ts = extract_timestamp(self.timestamp_box).replace(' ', '_')
             except ValueError as e:
-                print(e)
+                print(f"ERROR {e}; using current timestamp as approx")
                 est = pytz.timezone('US/Eastern')
                 ts = datetime.now(est).strftime('%Y-%m-%d_%H:%M:%S_approx')
             self.last_timestamp = ts

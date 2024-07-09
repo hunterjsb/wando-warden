@@ -11,4 +11,4 @@ terminals:
     cameras:
       - name: Main Gate
         url: https://scspa.com/wp-content/uploads/nct-maingate.jpg
-        timestamp_box: [0, 1030, 400, 1080]  # fuck this stupid timestamp
+        timestamp_box: [0, 1030, 400, 1080]
