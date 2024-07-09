@@ -30,7 +30,7 @@ def main():
     for terminal in terminals:
         st.header(f"Terminal: {terminal.name}")
         for camera in terminal.cameras:
-            st.subheader(f"Camera: {camera.full_name}")
+            st.subheader(f"Camera: {camera.name}")
 
             if st.button(f"Process {camera.full_name}"):
                 try:
