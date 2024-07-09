@@ -4,3 +4,4 @@ Pillow
 pytz
 mysql-connector-python
 psycopg2-binary
+boto3
