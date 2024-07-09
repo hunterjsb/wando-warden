@@ -1,6 +1,5 @@
 from warden.terminal import load_terminals
 from warden.memory import LocalPhotoMemory
-from warden.ocr import extract_timestamp
 
 
 mem = LocalPhotoMemory("../images")
