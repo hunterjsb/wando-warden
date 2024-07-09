@@ -1,7 +1,6 @@
 import argparse
 import logging
 import os
-import time
 from typing import Union
 
 from warden.terminal import load_terminals
