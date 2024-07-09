@@ -2,6 +2,9 @@
 
 wando-warden can watch terminal cameras (such as those at Wando Welch), read the timestamp from the image, and counts the number of trucks.
 
+![wando-maingate](https://github.com/hunterjsb/wando-warden/assets/69213737/9e76295c-f2f1-4e44-8978-61d2d6dfbbe1)
+
+
 ## Installation
 
 1. Clone this repository:
