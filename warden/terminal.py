@@ -15,16 +15,22 @@ except ImportError:
 
 
 class Camera:
-    def __init__(self, name: str, url: str, terminal: 'Terminal'):
+    def __init__(self, name: str, url: str, terminal: 'Terminal', timestamp_box: tuple[int, int, int, int]):
         self.name = name
         self.url = url
         self.terminal = terminal
         self.memory = terminal.memory
         self.last_image: Optional[Image.Image] = None
 
+        self._timestamp_box = timestamp_box  # coordinates are left, upper, right, bottom (PIL crop)
+
     @property
     def full_name(self) -> str:
         return to_snake_case(self.terminal.name + ' ' + self.name)
+
+    @property
+    def timestamp_box(self):
+        return self.last_image.crop(self._timestamp_box)
 
     def get(self) -> Image.Image:
         resp = requests.get(self.url)
@@ -47,8 +53,8 @@ class Terminal:
         self.cameras: List[Camera] = []
         self.memory = memory
 
-    def add_camera(self, name: str, url: str) -> Camera:
-        camera = Camera(name, url, self)
+    def add_camera(self, name: str, url: str, timestamp_box: tuple[int, int, int, int]) -> Camera:
+        camera = Camera(name, url, self, timestamp_box)
         self.cameras.append(camera)
         return camera
 
@@ -61,7 +67,7 @@ def load_terminals(yaml_file: str, memory: Memory) -> List[Terminal]:
     for terminal_data in data['terminals']:
         terminal = Terminal(terminal_data['name'], memory)
         for cam in terminal_data['cameras']:
-            terminal.add_camera(cam['name'], cam['url'])
+            terminal.add_camera(cam['name'], cam['url'], cam['timestamp_box'])
         terminals.append(terminal)
 
     return terminals
