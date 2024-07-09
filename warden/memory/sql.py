@@ -12,6 +12,8 @@ from warden.memory.base import DatabaseMemory, Memory
 
 
 class SQLiteMemory(DatabaseMemory):
+    import_failed = sqlite3 is None
+
     def __init__(self, db_path: str):
         self.db_path = db_path
         self._create_table()

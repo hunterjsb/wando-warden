@@ -1,12 +1,11 @@
 import argparse
 import logging
 import os
-from typing import Union, Tuple
-
-import boto3
+from typing import Union
 
 from warden.terminal import load_terminals
 from warden.memory import LocalPhotoMemory, S3PhotoMemory, MySQLMemory, PostgreSQLMemory, DynamoDBMemory, SQLiteMemory
+from warden.detection import detect_trucks
 
 
 def setup_logging(level: int = logging.INFO) -> None:
@@ -27,7 +26,7 @@ def get_photo_memory(storage_type: str) -> Union[LocalPhotoMemory, S3PhotoMemory
 
 def get_db_memory(db_type: str) -> Union[SQLiteMemory, MySQLMemory, PostgreSQLMemory, DynamoDBMemory]:
     if db_type == 'sqlite':
-        if SQLiteMemory is None:
+        if SQLiteMemory.import_failed:
             raise ImportError('sqlite could not be imported')
         return SQLiteMemory(os.environ.get('SQLITE_DB_PATH', 'truck_detections.db'))
     elif db_type == 'mysql':
@@ -53,29 +52,11 @@ def get_db_memory(db_type: str) -> Union[SQLiteMemory, MySQLMemory, PostgreSQLMe
         raise ValueError(f"Unsupported database type: {db_type}")
 
 
-def detect_trucks(photo: str, bucket: str) -> Tuple[int, float]:
-    client = boto3.client('rekognition', region_name='us-east-1')
-    response = client.detect_labels(
-        Image={'S3Object': {'Bucket': bucket, 'Name': photo}},
-        MaxLabels=10
-    )
-
-    truck_instances = []
-    for label in response['Labels']:
-        if label['Name'].lower() in ['truck', 'vehicle']:
-            truck_instances.extend(label['Instances'])
-
-    truck_count = len(truck_instances)
-    avg_confidence = sum(instance['Confidence'] for instance in truck_instances) / truck_count if truck_count > 0 else 0
-
-    return truck_count, avg_confidence
-
-
 def main() -> None:
     parser = argparse.ArgumentParser(description='Warden Camera Management')
     parser.add_argument('--terminals', default='../terminals.yaml', help='Path to terminals YAML file')
     parser.add_argument('--storage', choices=['local', 's3'], default='s3', help='Storage type (local or s3)')
-    parser.add_argument('--db', choices=['sqlite', 'mysql', 'postgres', 'dynamodb'], default='postgres',
+    parser.add_argument('--db', choices=['sqlite', 'mysql', 'postgres', 'dynamodb'], default='dynamodb',
                         help='Database type for truck detection results')
     parser.add_argument('--log-level', default='INFO', help='Logging level')
     parser.add_argument('--detect-trucks', action='store_true', help='Perform truck detection')
