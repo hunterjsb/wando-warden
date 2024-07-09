@@ -35,5 +35,34 @@ def s3_jpg():
     loaded_image.show()
 
 
+def dynamo_results():
+    from warden.memory import DynamoDBMemory
+
+    memory = DynamoDBMemory('truck_detections', 'us-east-1')
+
+    # Test saving
+    memory.save((5, 0.95), 'camera1|2023-05-01_12:00:00')
+    memory.save((3, 0.87), 'camera2|2023-05-01_13:00:00')
+
+    # Test loading
+    try:
+        result1 = memory.load('camera1|2023-05-01_12:00:00')
+        print(f"Loaded data for camera1: {result1}")
+    except KeyError as e:
+        print(str(e))
+
+    try:
+        result2 = memory.load('camera2|2023-05-01_13:00:00')
+        print(f"Loaded data for camera2: {result2}")
+    except KeyError as e:
+        print(str(e))
+
+    # Test loading non-existent item
+    try:
+        memory.load('camera3|2023-05-01_14:00:00')
+    except KeyError as e:
+        print(str(e))
+
+
 if __name__ == '__main__':
-    s3_jpg()
+    dynamo_results()

@@ -3,7 +3,7 @@ from typing import Tuple
 import boto3
 
 
-def detect_trucks(photo: str, bucket: str, max_labels=30) -> Tuple[int, float]:
+def detect_trucks(photo: str, bucket: str, max_labels=40) -> Tuple[int, float]:
     client = boto3.client('rekognition', region_name='us-east-1')
     response = client.detect_labels(
         Image={'S3Object': {'Bucket': bucket, 'Name': photo}},
@@ -12,7 +12,6 @@ def detect_trucks(photo: str, bucket: str, max_labels=30) -> Tuple[int, float]:
         Settings={"GeneralLabels": {"LabelInclusionFilters": ["Truck"]}}
     )
 
-    print(response)
     trucks = response['Labels'][0]
     truck_count = len(trucks['Instances'])
     avg_confidence = sum(instance['Confidence'] for instance in trucks['Instances']) / truck_count if truck_count > 0 else 0

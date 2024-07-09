@@ -1,4 +1,5 @@
 from typing import Tuple
+from decimal import Decimal
 
 import boto3
 try:
@@ -159,11 +160,11 @@ class DynamoDBMemory(Memory[Tuple[int, float]]):
                 'camera_name': camera_name,
                 'timestamp': timestamp,
                 'truck_count': truck_count,
-                'avg_confidence': avg_confidence
+                'avg_confidence': Decimal(f"{avg_confidence:.2f}")
             }
         )
 
-    def load(self, name: str) -> Tuple[int, float]:
+    def load(self, name: str) -> Tuple[int, float]:  # might be Decimal
         camera_name, timestamp = name.split('|')
         response = self.table.get_item(
             Key={

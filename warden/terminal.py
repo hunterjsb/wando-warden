@@ -4,6 +4,7 @@ from warden.ocr import extract_timestamp, to_snake_case
 from typing import List, Optional
 import io
 from datetime import datetime
+import logging
 
 import requests
 from PIL import Image
@@ -61,12 +62,12 @@ class Camera:
             try:
                 ts = extract_timestamp(self.timestamp_box).replace(' ', '_')
             except ValueError as e:
-                print(f"ERROR {e}; using current timestamp as approx")
+                logging.log(logging.ERROR, f"{e}; using current timestamp as approx")
                 est = pytz.timezone('US/Eastern')
                 ts = datetime.now(est).strftime('%Y-%m-%d_%H:%M:%S_approx')
             self.last_timestamp = ts
-        self.last_image_name = f"{self.full_name}_{ts}"
-        self.memory.save(self.last_image, f"{self.full_name}_{ts}")
+        self.last_image_name = f"{self.full_name}_{ts}.jpg"
+        self.memory.save(self.last_image, f"{self.full_name}_{ts}.jpg")
 
 
 class Terminal:

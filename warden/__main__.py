@@ -1,6 +1,7 @@
 import argparse
 import logging
 import os
+import time
 from typing import Union
 
 from warden.terminal import load_terminals
@@ -81,8 +82,8 @@ def main() -> None:
                     if args.detect_trucks:
                         truck_count, avg_confidence = detect_trucks(camera.last_image_name,
                                                                     os.environ.get('S3_BUCKET_NAME', 'wando-warden'))
-                        db_mem.save((truck_count, avg_confidence), f"{camera.full_name}|{camera.last_timestamp}")
                         logger.info(f"Detected {truck_count} trucks with average confidence {avg_confidence:.2f}")
+                        db_mem.save((truck_count, avg_confidence), f"{camera.full_name}|{camera.last_timestamp}")
 
                 except Exception as e:
                     logger.error(f"Error processing camera {camera.full_name}: {str(e)}")
