@@ -76,7 +76,7 @@ def main() -> None:
                 try:
                     camera.get()
                     camera.save_last(with_timestamp=True)
-                    logger.info(f"Processed CAMERA: {camera.full_name} @ {camera.last_timestamp}")
+                    logger.info(f"Processed CAMERA: {camera.full_name}_{camera.last_timestamp}")
 
                     if args.detect_trucks:
                         truck_count, avg_confidence = detect_trucks(camera.last_image_name,
