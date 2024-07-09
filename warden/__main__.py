@@ -13,7 +13,7 @@ def setup_logging(level: int = logging.INFO) -> None:
 
 def get_memory(storage_type: str) -> Union[LocalPhotoMemory, S3PhotoMemory]:
     if storage_type == 'local':
-        return LocalPhotoMemory(os.environ.get('LOCAL_STORAGE_PATH', '../images'))
+        return LocalPhotoMemory(os.environ.get('LOCAL_STORAGE_PATH', './images'))
     elif storage_type == 's3':
         return S3PhotoMemory(
             bucket_name=os.environ.get('S3_BUCKET_NAME', 'wando-warden'),
@@ -25,7 +25,7 @@ def get_memory(storage_type: str) -> Union[LocalPhotoMemory, S3PhotoMemory]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description='Warden Camera Management')
-    parser.add_argument('--terminals', default='../terminals.yaml', help='Path to terminals YAML file')
+    parser.add_argument('--terminals', default='./terminals.yaml', help='Path to terminals YAML file')
     parser.add_argument('--storage', choices=['local', 's3'], default='s3', help='Storage type (local or s3)')
     parser.add_argument('--log-level', default='INFO', help='Logging level')
     args = parser.parse_args()
