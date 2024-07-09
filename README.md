@@ -9,6 +9,9 @@ wando-warden can watch terminal cameras (such as those at Wando Welch), read the
 - AI object detection using AWS Rekognition
 - Flexible storage options
 
+![warden drawio](https://github.com/hunterjsb/wando-warden/assets/69213737/75644e94-cfb3-4127-afaa-b608f00740bf)
+
+
 ## Installation
 
 1. Clone this repository:
