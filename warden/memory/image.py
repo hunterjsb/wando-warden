@@ -1,24 +1,12 @@
 import os
-from abc import ABC, abstractmethod
-from typing import Generic, TypeVar, Optional
+from typing import Optional
 from io import BytesIO
 
 from PIL import Image
 import boto3
 from botocore.exceptions import ClientError
 
-T = TypeVar('T')
-
-
-class Memory(ABC, Generic[T]):
-    """Base class, implement save and load for different ways to persist data"""
-    @abstractmethod
-    def save(self, obj: T, name: str) -> None:
-        pass
-
-    @abstractmethod
-    def load(self, name: str) -> T:
-        pass
+from warden.memory.base import Memory
 
 
 class LocalPhotoMemory(Memory[Image.Image]):

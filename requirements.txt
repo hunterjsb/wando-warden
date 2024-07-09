@@ -2,3 +2,5 @@ requests
 pyyaml
 Pillow
 pytz
+mysql-connector-python
+psycopg2-binary

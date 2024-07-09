@@ -24,7 +24,9 @@ class Camera:
         self.terminal = terminal
         self.memory = terminal.memory
 
+        # TODO refactor this into `Frame` dataclass
         self.last_image: Optional[Image.Image] = None
+        self.last_image_name = ''
         self.last_timestamp: Optional[str] = None
 
         self._timestamp_box = timestamp_box  # coordinates are left, upper, right, bottom (PIL crop)
@@ -63,6 +65,7 @@ class Camera:
                 est = pytz.timezone('US/Eastern')
                 ts = datetime.now(est).strftime('%Y-%m-%d_%H:%M:%S_approx')
             self.last_timestamp = ts
+        self.last_image_name = f"{self.full_name}_{ts}"
         self.memory.save(self.last_image, f"{self.full_name}_{ts}")
 
 
