@@ -65,7 +65,7 @@ class Camera:
             except (ValueError, TesseractNotFoundError) as e:
                 err_str = (f"encountered an error when extracting the timestamp, "
                            f"using current timestamp as _approx: {e}")
-                logging.log(logging.ERROR, err_str)
+                logging.log(logging.WARN, err_str)
                 est = pytz.timezone('US/Eastern')
                 ts = datetime.now(est).strftime('%Y-%m-%d_%H:%M:%S_approx')
             self.last_timestamp = ts
