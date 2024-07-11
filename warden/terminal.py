@@ -9,6 +9,7 @@ import logging
 import requests
 from PIL import Image
 from yaml import load
+from pytesseract import TesseractNotFoundError
 import pytz
 try:
     from yaml import CLoader as Loader, CDumper as Dumper
@@ -61,7 +62,7 @@ class Camera:
         if with_timestamp:
             try:
                 ts = extract_timestamp(self.timestamp_box).replace(' ', '_')
-            except ValueError as e:
+            except (ValueError, TesseractNotFoundError) as e:
                 logging.log(logging.ERROR, f"{e}; using current timestamp as approx")
                 est = pytz.timezone('US/Eastern')
                 ts = datetime.now(est).strftime('%Y-%m-%d_%H:%M:%S_approx')
