@@ -63,7 +63,7 @@ class Camera:
             try:
                 ts = extract_timestamp(self.timestamp_box).replace(' ', '_')
             except (ValueError, TesseractNotFoundError) as e:
-                err_str = (f"warning - warden encountered an error when extracting the timestamp, "
+                err_str = (f"encountered an error when extracting the timestamp, "
                            f"using current timestamp as _approx: {e}")
                 logging.log(logging.ERROR, err_str)
                 est = pytz.timezone('US/Eastern')
