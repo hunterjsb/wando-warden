@@ -69,9 +69,6 @@ def main():
             df = pd.DataFrame(results)
             df['timestamp'] = df['timestamp'].apply(parse_flexible_timestamp)
 
-            # Convert Decimal to float
-            df['avg_confidence'] = df['avg_confidence'].apply(lambda x: float(x))
-
             chart = alt.Chart(df).mark_line().encode(
                 x='timestamp:T',
                 y='truck_count:Q',
