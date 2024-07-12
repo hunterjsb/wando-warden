@@ -2,9 +2,10 @@ import traceback
 
 import streamlit as st
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 import pandas as pd
 from boto3.dynamodb.conditions import Attr
+import pytz
 
 from warden.terminal import load_terminals
 from warden.detection import detect_trucks
@@ -60,7 +61,12 @@ def main():
         start_date = st.date_input("Start Date", datetime.now().date() - timedelta(days=14))
         end_date = st.date_input("End Date", datetime.now().date())
 
-        results = query_db(db_mem, start_date, end_date)
+        start_ts = int(datetime(*start_date.timetuple()[:3], tzinfo=pytz.timezone('US/Eastern')).
+                       astimezone(UTC).timestamp()*1000)
+        end_ts = int(datetime(*end_date.timetuple()[:3], tzinfo=pytz.timezone('US/Eastern')).
+                     astimezone(UTC).timestamp()*1000)
+
+        results = query_db(db_mem, start_ts, end_ts)
 
         if results:
             if st.checkbox("view table"):
@@ -70,7 +76,7 @@ def main():
             st.subheader("Truck Count per Camera Over Time")
             df = pd.DataFrame(results)
             df['truck_count'] = df['truck_count'].apply(lambda x: float(x))
-            df['timestamp'] = df['timestamp'].apply(parse_flexible_timestamp)
+            df['timestamp'] = df['timestamp'].apply(lambda x: datetime.fromtimestamp(int(x)/1000, tz=UTC))
             pivot_df = df.pivot(index='timestamp', columns='camera_name', values='truck_count')
             st.scatter_chart(pivot_df)
 
@@ -78,18 +84,10 @@ def main():
             st.info("No data available for the selected date range.")
 
 
-def parse_flexible_timestamp(ts_str) -> datetime:
-    try:
-        return datetime.strptime(ts_str, "%Y-%m-%d_%H:%M:%S")
-    except ValueError:
-        return datetime.strptime(ts_str.replace("_approx", ""), "%Y-%m-%d_%H:%M:%S")
-
-
-def query_db(db_mem, start_date, end_date):
-    start_timestamp = start_date.strftime("%Y-%m-%d_00:00:00")
-    end_timestamp = end_date.strftime("%Y-%m-%d_23:59:59")
+def query_db(db_mem, start_ts: int, end_ts: int):
 
     response = db_mem.table.scan(
+        FilterExpression=Attr('timestamp').between(start_ts, end_ts)
     )
 
     items = response['Items']
@@ -97,7 +95,7 @@ def query_db(db_mem, start_date, end_date):
     # Paginate through the results if there are more
     while 'LastEvaluatedKey' in response:
         response = db_mem.table.scan(
-            FilterExpression=Attr('timestamp').between(start_timestamp, end_timestamp),
+            FilterExpression=Attr('timestamp').between(start_ts, end_ts),
             ExclusiveStartKey=response['LastEvaluatedKey']
         )
         items.extend(response['Items'])

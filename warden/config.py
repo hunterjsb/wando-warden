@@ -42,7 +42,7 @@ def get_db_memory(db_type: str) -> Union[SQLiteMemory, MySQLMemory, PostgreSQLMe
         )
     elif db_type == 'dynamodb':
         return DynamoDBMemory(
-            table_name=os.environ.get('DYNAMODB_TABLE', 'truck_detections'),
+            table_name=os.environ.get('DYNAMODB_TABLE', 'ww_truck_detections'),
             region_name=os.environ.get('AWS_REGION', 'us-east-1')
         )
     else:
