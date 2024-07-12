@@ -60,11 +60,11 @@ def main():
         results = query_db(db_mem, start_date, end_date)
 
         if results:
-            # Display data table
+            # table
             st.subheader("Data Table")
             st.table(results)
 
-            # Create visualization
+            # visualization
             st.subheader("Truck Count Visualization")
             df = pd.DataFrame(results)
             df['timestamp'] = df['timestamp'].apply(parse_flexible_timestamp)
@@ -85,7 +85,7 @@ def main():
             st.info("No data available for the selected date range.")
 
 
-def parse_flexible_timestamp(ts_str):
+def parse_flexible_timestamp(ts_str) -> datetime:
     try:
         return datetime.strptime(ts_str, "%Y-%m-%d_%H:%M:%S")
     except ValueError:
