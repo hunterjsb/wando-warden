@@ -71,12 +71,8 @@ def main():
             df = pd.DataFrame(results)
             df['truck_count'] = df['truck_count'].apply(lambda x: float(x))
             df['timestamp'] = df['timestamp'].apply(parse_flexible_timestamp)
-
-            # Pivot the dataframe to have each camera as a column
             pivot_df = df.pivot(index='timestamp', columns='camera_name', values='truck_count')
-
-            # Create the line chart
-            st.line_chart(pivot_df)
+            st.scatter_chart(pivot_df)
 
         else:
             st.info("No data available for the selected date range.")
