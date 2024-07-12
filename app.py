@@ -61,11 +61,7 @@ def main():
     if view_data:
         start_date = st.date_input("Start Date", datetime.now().date() - timedelta(days=14))
         end_date = st.date_input("End Date", datetime.now().date())
-
-        start_ts = int(datetime(*start_date.timetuple()[:3], tzinfo=pytz.timezone('US/Eastern')).
-                       astimezone(pytz.UTC).timestamp()*1000)
-        end_ts = int(datetime(*end_date.timetuple()[:3], tzinfo=pytz.timezone('US/Eastern')).
-                     astimezone(pytz.UTC).timestamp()*1000)
+        start_ts, end_ts = date_to_utc_ms(start_date), date_to_utc_ms(end_date)
 
         results = query_db(db_mem, start_ts, end_ts)
 
@@ -102,6 +98,15 @@ def query_db(db_mem, start_ts: int, end_ts: int):
         items.extend(response['Items'])
 
     return items
+
+
+def date_to_utc_ms(date, tz='US/Eastern', time=None):
+    if time is None:
+        time = (0, 0, 0)  # midnight by default
+    local_dt = datetime.combine(date, datetime.min.time().replace(*time))
+    local_dt = pytz.timezone(tz).localize(local_dt)
+    utc_dt = local_dt.astimezone(pytz.UTC)
+    return int(utc_dt.timestamp() * 1000)
 
 
 if __name__ == "__main__":
