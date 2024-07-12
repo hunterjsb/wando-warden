@@ -1,6 +1,10 @@
+import traceback
+
 import streamlit as st
 import os
 from datetime import datetime, timedelta
+import pandas as pd
+from boto3.dynamodb.conditions import Attr
 
 from warden.terminal import load_terminals
 from warden.detection import detect_trucks
@@ -45,24 +49,64 @@ def main():
                         db_mem.save((truck_count, avg_confidence), f"{camera.full_name}|{camera.last_timestamp}")
 
                 except Exception as e:
-                    st.error(f"Error processing camera {camera.full_name}: {str(e)}")
+                    error_msg = (f"Error processing camera {camera.full_name}: {str(e)}\n\n"
+                                 f"Traceback:\n{traceback.format_exc()}")
+                    st.error(error_msg)
 
-    # Data Viewer
-    st.header("View Stored Data")
+    # Data Viewer and Visualization
+    st.header("View Stored Data and Visualization")
     view_data = st.checkbox("View stored truck detection data")
     if view_data:
-        start_date = st.date_input("Start Date", datetime.now().date() - timedelta(days=7))
+        start_date = st.date_input("Start Date", datetime.now().date() - timedelta(days=14))
         end_date = st.date_input("End Date", datetime.now().date())
 
-        # PLACE HELD
         results = query_db(db_mem, start_date, end_date)
 
-        st.table(results)
+        if results:
+            if st.checkbox("view table"):
+                st.subheader("Data Table")
+                st.table(results)
+
+            st.subheader("Truck Count per Camera Over Time")
+            df = pd.DataFrame(results)
+            df['truck_count'] = df['truck_count'].apply(lambda x: float(x))
+            df['timestamp'] = df['timestamp'].apply(parse_flexible_timestamp)
+
+            # Pivot the dataframe to have each camera as a column
+            pivot_df = df.pivot(index='timestamp', columns='camera_name', values='truck_count')
+
+            # Create the line chart
+            st.line_chart(pivot_df)
+
+        else:
+            st.info("No data available for the selected date range.")
+
+
+def parse_flexible_timestamp(ts_str) -> datetime:
+    try:
+        return datetime.strptime(ts_str, "%Y-%m-%d_%H:%M:%S")
+    except ValueError:
+        return datetime.strptime(ts_str.replace("_approx", ""), "%Y-%m-%d_%H:%M:%S")
 
 
 def query_db(db_mem, start_date, end_date):
-    # PLACEHOLDER
-    return []
+    start_timestamp = start_date.strftime("%Y-%m-%d_00:00:00")
+    end_timestamp = end_date.strftime("%Y-%m-%d_23:59:59")
+
+    response = db_mem.table.scan(
+    )
+
+    items = response['Items']
+
+    # Paginate through the results if there are more
+    while 'LastEvaluatedKey' in response:
+        response = db_mem.table.scan(
+            FilterExpression=Attr('timestamp').between(start_timestamp, end_timestamp),
+            ExclusiveStartKey=response['LastEvaluatedKey']
+        )
+        items.extend(response['Items'])
+
+    return items
 
 
 if __name__ == "__main__":
