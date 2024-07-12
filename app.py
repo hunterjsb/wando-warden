@@ -54,33 +54,27 @@ def main():
     st.header("View Stored Data and Visualization")
     view_data = st.checkbox("View stored truck detection data")
     if view_data:
-        start_date = st.date_input("Start Date", datetime.now().date() - timedelta(days=7))
+        start_date = st.date_input("Start Date", datetime.now().date() - timedelta(days=14))
         end_date = st.date_input("End Date", datetime.now().date())
 
         results = query_db(db_mem, start_date, end_date)
 
         if results:
-            # table
-            st.subheader("Data Table")
-            st.table(results)
+            if st.checkbox("view table"):
+                st.subheader("Data Table")
+                st.table(results)
 
-            # visualization
-            st.subheader("Truck Count Visualization")
+            st.subheader("Truck Count per Camera Over Time")
             df = pd.DataFrame(results)
-            df['timestamp'] = df['timestamp'].apply(parse_flexible_timestamp)
+            df['truck_count'] = df['truck_count'].apply(lambda x: float(x))
+            # df['timestamp'] = pd.to_datetime(df['timestamp'])
 
-            chart = alt.Chart(df).mark_line().encode(
-                x='timestamp:T',
-                y='truck_count:Q',
-                color='camera_name:N',
-                tooltip=['camera_name', 'timestamp', 'truck_count', 'avg_confidence:Q']
-            ).properties(
-                width=700,
-                height=400,
-                title="Truck Count Over Time"
-            ).interactive()
+            # Pivot the dataframe to have each camera as a column
+            pivot_df = df.pivot(index='timestamp', columns='camera_name', values='truck_count')
 
-            st.altair_chart(chart)
+            # Create the line chart
+            st.line_chart(pivot_df)
+
         else:
             st.info("No data available for the selected date range.")
 
