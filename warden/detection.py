@@ -12,6 +12,9 @@ def detect_trucks(photo: str, bucket: str, max_labels=40) -> Tuple[int, float]:
         Settings={"GeneralLabels": {"LabelInclusionFilters": ["Truck"]}}
     )
 
+    if len(response['Labels']) == 0:
+        return 0, 0
+
     trucks = response['Labels'][0]
     truck_count = len(trucks['Instances'])
     avg_confidence = sum(instance['Confidence'] for instance in trucks['Instances']) / truck_count if truck_count > 0 else 0

@@ -1,8 +1,9 @@
+import traceback
+
 import streamlit as st
 import os
 from datetime import datetime, timedelta
 import pandas as pd
-import altair as alt
 from boto3.dynamodb.conditions import Attr
 
 from warden.terminal import load_terminals
@@ -48,7 +49,9 @@ def main():
                         db_mem.save((truck_count, avg_confidence), f"{camera.full_name}|{camera.last_timestamp}")
 
                 except Exception as e:
-                    st.error(f"Error processing camera {camera.full_name}: {str(e)}")
+                    error_msg = (f"Error processing camera {camera.full_name}: {str(e)}\n\n"
+                                 f"Traceback:\n{traceback.format_exc()}")
+                    st.error(error_msg)
 
     # Data Viewer and Visualization
     st.header("View Stored Data and Visualization")
@@ -67,7 +70,7 @@ def main():
             st.subheader("Truck Count per Camera Over Time")
             df = pd.DataFrame(results)
             df['truck_count'] = df['truck_count'].apply(lambda x: float(x))
-            # df['timestamp'] = pd.to_datetime(df['timestamp'])
+            df['timestamp'] = df['timestamp'].apply(parse_flexible_timestamp)
 
             # Pivot the dataframe to have each camera as a column
             pivot_df = df.pivot(index='timestamp', columns='camera_name', values='truck_count')
@@ -91,7 +94,6 @@ def query_db(db_mem, start_date, end_date):
     end_timestamp = end_date.strftime("%Y-%m-%d_23:59:59")
 
     response = db_mem.table.scan(
-        FilterExpression=Attr('timestamp').between(start_timestamp, end_timestamp)
     )
 
     items = response['Items']
