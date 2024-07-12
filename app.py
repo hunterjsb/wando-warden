@@ -47,7 +47,8 @@ def main():
                         truck_count, avg_confidence = detect_trucks(camera.last_image_name,
                                                                     os.environ.get('S3_BUCKET_NAME', 'wando-warden'))
                         st.info(f"Detected {truck_count} trucks with average confidence {avg_confidence:.2f}")
-                        db_mem.save((truck_count, avg_confidence), f"{camera.full_name}|{camera.last_timestamp}")
+                        db_mem.save((truck_count, avg_confidence), f"{camera.full_name}|{camera.last_timestamp}|"
+                                                                   f"{camera.last_ts_approx}")
 
                 except Exception as e:
                     error_msg = (f"Error processing camera {camera.full_name}: {str(e)}\n\n"
