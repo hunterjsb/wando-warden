@@ -2,7 +2,7 @@ import traceback
 
 import streamlit as st
 import os
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, timedelta
 import pandas as pd
 from boto3.dynamodb.conditions import Attr
 import pytz
@@ -62,9 +62,9 @@ def main():
         end_date = st.date_input("End Date", datetime.now().date())
 
         start_ts = int(datetime(*start_date.timetuple()[:3], tzinfo=pytz.timezone('US/Eastern')).
-                       astimezone(UTC).timestamp()*1000)
+                       astimezone(pytz.UTC).timestamp()*1000)
         end_ts = int(datetime(*end_date.timetuple()[:3], tzinfo=pytz.timezone('US/Eastern')).
-                     astimezone(UTC).timestamp()*1000)
+                     astimezone(pytz.UTC).timestamp()*1000)
 
         results = query_db(db_mem, start_ts, end_ts)
 
@@ -76,7 +76,7 @@ def main():
             st.subheader("Truck Count per Camera Over Time")
             df = pd.DataFrame(results)
             df['truck_count'] = df['truck_count'].apply(lambda x: float(x))
-            df['timestamp'] = df['timestamp'].apply(lambda x: datetime.fromtimestamp(int(x)/1000, tz=UTC))
+            df['timestamp'] = df['timestamp'].apply(lambda x: datetime.fromtimestamp(int(x)/1000, tz=pytz.UTC))
             pivot_df = df.pivot(index='timestamp', columns='camera_name', values='truck_count')
             st.scatter_chart(pivot_df)
 
