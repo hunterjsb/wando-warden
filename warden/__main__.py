@@ -20,29 +20,23 @@ def main() -> None:
     setup_logging(getattr(logging, args.log_level.upper()))
     logger = logging.getLogger(__name__)
 
-    try:
-        photo_mem = get_photo_memory(args.storage)
-        db_mem = get_db_memory(args.db)
-        terminals = load_terminals(args.terminals, photo_mem)
+    photo_mem = get_photo_memory(args.storage)
+    db_mem = get_db_memory(args.db)
+    terminals = load_terminals(args.terminals, photo_mem)
 
-        for terminal in terminals:
-            logger.info(f"Processing Terminal: {terminal.name}")
-            for camera in terminal.cameras:
-                try:
-                    camera.get()
-                    camera.save_last(with_timestamp=True)
-                    logger.info(f"Processed CAMERA: {camera.full_name}_{camera.last_timestamp}")
+    for terminal in terminals:
+        logger.info(f"Processing Terminal: {terminal.name}")
+        for camera in terminal.cameras:
+            camera.get()
+            camera.save_last(with_timestamp=True)
+            logger.info(f"Processed CAMERA: {camera.full_name}_{camera.last_timestamp}")
 
-                    if args.detect_trucks:
-                        truck_count, avg_confidence = detect_trucks(camera.last_image_name,
-                                                                    os.environ.get('S3_BUCKET_NAME', 'wando-warden'))
-                        logger.info(f"Detected {truck_count} trucks with average confidence {avg_confidence:.2f}")
-                        db_mem.save((truck_count, avg_confidence), f"{camera.full_name}|{camera.last_timestamp}")
-
-                except Exception as e:
-                    logger.error(f"Error processing camera {camera.full_name}: {str(e)}")
-    except Exception as e:
-        logger.error(f"An error occurred: {str(e)}")
+            if args.detect_trucks:
+                truck_count, avg_confidence = detect_trucks(camera.last_image_name,
+                                                            os.environ.get('S3_BUCKET_NAME', 'wando-warden'))
+                logger.info(f"Detected {truck_count} trucks with average confidence {avg_confidence:.2f}")
+                db_mem.save((truck_count, avg_confidence), f"{camera.full_name}|{camera.last_timestamp}|"
+                                                           f"{camera.last_ts_approx}")
 
 
 if __name__ == "__main__":

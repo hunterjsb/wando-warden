@@ -1,6 +1,3 @@
-from warden.memory import Memory
-from warden.ocr import extract_timestamp, to_snake_case
-
 from typing import List, Optional
 import io
 from datetime import datetime
@@ -17,6 +14,9 @@ except ImportError:
     print('warning: could not load c yaml libraries')
     from yaml import Loader, Dumper
 
+from warden.memory import Memory
+from warden.ocr import extract_timestamp, to_snake_case
+
 
 class Camera:
     """A camera stationed at a specific Terminal"""
@@ -26,11 +26,12 @@ class Camera:
         self.terminal = terminal
         self.memory = terminal.memory
 
-        # TODO refactor this into `Frame` dataclass
+        # frame
         self.last_image: Optional[Image.Image] = None
         self.last_image_name = ''
-        self.last_timestamp: Optional[str] = None
+        self.last_timestamp: Optional[int] = None  # UNIX ms timestamp
 
+        self.last_ts_approx = False  # Did we use datetime.now() to approximate the timestamp?
         self._timestamp_box = timestamp_box  # coordinates are left, upper, right, bottom (PIL crop)
 
     @property
@@ -58,19 +59,19 @@ class Camera:
         if not self.last_image:
             raise AttributeError("missing last image, cannot save")
 
-        ts = 'latest'
+        ts = 0
         if with_timestamp:
             try:
-                ts = extract_timestamp(self.timestamp_box).replace(' ', '_')
+                ts = convert_est_to_utc_timestamp(extract_timestamp(self.timestamp_box))
             except (ValueError, TesseractNotFoundError) as e:
                 err_str = (f"encountered an error when extracting the timestamp, "
                            f"using current timestamp as _approx: {e}")
                 logging.log(logging.WARN, err_str)
-                est = pytz.timezone('US/Eastern')
-                ts = datetime.now(est).strftime('%Y-%m-%d_%H:%M:%S_approx')
+                ts = int(datetime.now(pytz.UTC).timestamp() * 1000)
             self.last_timestamp = ts
-        self.last_image_name = f"{self.full_name}_{ts}.jpg"
-        self.memory.save(self.last_image, f"{self.full_name}_{ts}.jpg")
+            self.last_ts_approx = True
+        self.last_image_name = f"{self.full_name}|{ts}|{self.last_ts_approx}.jpg"
+        self.memory.save(self.last_image, self.last_image_name)
 
 
 class Terminal:
@@ -99,3 +100,11 @@ def load_terminals(yaml_file: str, memory: Memory) -> List[Terminal]:
         terminals.append(terminal)
 
     return terminals
+
+
+def convert_est_to_utc_timestamp(est_timestamp_str):
+    est_tz = pytz.timezone('America/New_York')  # EST timezone
+    est_datetime = datetime.strptime(est_timestamp_str, '%Y-%m-%d %H:%M:%S')
+    est_datetime = est_tz.localize(est_datetime)  # Localize the datetime to EST
+    utc_datetime = est_datetime.astimezone(pytz.UTC)  # Convert to UTC
+    return int(utc_datetime.timestamp() * 1000)

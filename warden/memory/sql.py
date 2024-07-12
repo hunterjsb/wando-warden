@@ -26,30 +26,32 @@ class SQLiteMemory(DatabaseMemory):
                 CREATE TABLE IF NOT EXISTS truck_detections (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     camera_name TEXT,
-                    timestamp TEXT,
+                    timestamp INTEGER,
                     truck_count INTEGER,
-                    avg_confidence REAL
+                    avg_confidence REAL,
+                    ts_approx BOOLEAN
                 )
             ''')
 
     def save(self, obj: Tuple[int, float], name: str) -> None:
+        ts_approx = name.endswith('_approx')
         camera_name, timestamp = name.split('|')
         truck_count, avg_confidence = obj
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute('''
-                INSERT INTO truck_detections (camera_name, timestamp, truck_count, avg_confidence)
-                VALUES (?, ?, ?, ?)
-            ''', (camera_name, timestamp, truck_count, avg_confidence))
+                INSERT INTO truck_detections (camera_name, timestamp, truck_count, avg_confidence, ts_approx)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (camera_name, int(timestamp), truck_count, avg_confidence, ts_approx))
 
-    def load(self, name: str) -> Tuple[int, float]:
+    def load(self, name: str) -> Tuple[int, float, bool]:
         camera_name, timestamp = name.split('|')
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute('''
-                SELECT truck_count, avg_confidence FROM truck_detections
+                SELECT truck_count, avg_confidence, ts_approx FROM truck_detections
                 WHERE camera_name = ? AND timestamp = ?
-            ''', (camera_name, timestamp))
+            ''', (camera_name, int(timestamp)))
             result = cursor.fetchone()
         if result is None:
             raise KeyError(f"No data found for {name}")
@@ -73,31 +75,33 @@ class MySQLMemory(DatabaseMemory):
                 CREATE TABLE IF NOT EXISTS truck_detections (
                     id INT AUTO_INCREMENT PRIMARY KEY,
                     camera_name VARCHAR(255),
-                    timestamp VARCHAR(255),
+                    timestamp BIGINT,
                     truck_count INT,
-                    avg_confidence FLOAT
+                    avg_confidence FLOAT,
+                    ts_approx BOOLEAN
                 )
             ''')
 
     def save(self, obj: Tuple[int, float], name: str) -> None:
+        ts_approx = name.endswith('_approx')
         camera_name, timestamp = name.split('|')
         truck_count, avg_confidence = obj
         with mysql.connector.connect(**self.config) as conn:
             cursor = conn.cursor()
             cursor.execute('''
-                INSERT INTO truck_detections (camera_name, timestamp, truck_count, avg_confidence)
-                VALUES (%s, %s, %s, %s)
-            ''', (camera_name, timestamp, truck_count, avg_confidence))
+                INSERT INTO truck_detections (camera_name, timestamp, truck_count, avg_confidence, ts_approx)
+                VALUES (%s, %s, %s, %s, %s)
+            ''', (camera_name, int(timestamp), truck_count, avg_confidence, ts_approx))
             conn.commit()
 
-    def load(self, name: str) -> Tuple[int, float]:
+    def load(self, name: str):
         camera_name, timestamp = name.split('|')
         with mysql.connector.connect(**self.config) as conn:
             cursor = conn.cursor()
             cursor.execute('''
-                SELECT truck_count, avg_confidence FROM truck_detections
+                SELECT truck_count, avg_confidence, ts_approx FROM truck_detections
                 WHERE camera_name = %s AND timestamp = %s
-            ''', (camera_name, timestamp))
+            ''', (camera_name, int(timestamp)))
             result = cursor.fetchone()
         if result is None:
             raise KeyError(f"No data found for {name}")
@@ -116,30 +120,32 @@ class PostgreSQLMemory(DatabaseMemory):
                 CREATE TABLE IF NOT EXISTS truck_detections (
                     id SERIAL PRIMARY KEY,
                     camera_name TEXT,
-                    timestamp TEXT,
+                    timestamp BIGINT,
                     truck_count INTEGER,
-                    avg_confidence REAL
+                    avg_confidence REAL,
+                    ts_approx BOOLEAN
                 )
             ''')
 
     def save(self, obj: Tuple[int, float], name: str) -> None:
+        ts_approx = name.endswith('_approx')
         camera_name, timestamp = name.split('|')
         truck_count, avg_confidence = obj
         with psycopg2.connect(self.config) as conn:
             cursor = conn.cursor()
             cursor.execute('''
-                INSERT INTO truck_detections (camera_name, timestamp, truck_count, avg_confidence)
-                VALUES (%s, %s, %s, %s)
-            ''', (camera_name, timestamp, truck_count, avg_confidence))
+                INSERT INTO truck_detections (camera_name, timestamp, truck_count, avg_confidence, ts_approx)
+                VALUES (%s, %s, %s, %s, %s)
+            ''', (camera_name, int(timestamp), truck_count, avg_confidence, ts_approx))
 
-    def load(self, name: str) -> Tuple[int, float]:
+    def load(self, name: str) -> Tuple[int, float, bool]:
         camera_name, timestamp = name.split('|')
         with psycopg2.connect(self.config) as conn:
             cursor = conn.cursor()
             cursor.execute('''
-                SELECT truck_count, avg_confidence FROM truck_detections
+                SELECT truck_count, avg_confidence, ts_approx FROM truck_detections
                 WHERE camera_name = %s AND timestamp = %s
-            ''', (camera_name, timestamp))
+            ''', (camera_name, int(timestamp)))
             result = cursor.fetchone()
         if result is None:
             raise KeyError(f"No data found for {name}")
@@ -153,26 +159,28 @@ class DynamoDBMemory(Memory[Tuple[int, float]]):
         self.table = self.dynamodb.Table(table_name)
 
     def save(self, obj: Tuple[int, float], name: str) -> None:
-        camera_name, timestamp = name.split('|')
+        camera_name, timestamp, approx = name.split('|')
+        ts_approx = approx == 'true'
         truck_count, avg_confidence = obj
         self.table.put_item(
             Item={
                 'camera_name': camera_name,
-                'timestamp': timestamp,
+                'timestamp': int(timestamp),  # Convert to int
                 'truck_count': truck_count,
-                'avg_confidence': Decimal(f"{avg_confidence:.2f}")
+                'avg_confidence': Decimal(f"{avg_confidence:.2f}"),
+                'ts_approx': ts_approx
             }
         )
 
-    def load(self, name: str) -> Tuple[int, float]:  # might be Decimal
+    def load(self, name: str) -> Tuple[int, float, bool]:  # Return type updated
         camera_name, timestamp = name.split('|')
         response = self.table.get_item(
             Key={
                 'camera_name': camera_name,
-                'timestamp': timestamp
+                'timestamp': int(timestamp)  # Convert to int
             }
         )
         if 'Item' not in response:
             raise KeyError(f"No data found for {name}")
         item = response['Item']
-        return item['truck_count'], item['avg_confidence']
+        return item['truck_count'], item['avg_confidence'], item['ts_approx']
