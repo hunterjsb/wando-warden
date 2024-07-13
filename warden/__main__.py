@@ -5,6 +5,7 @@ import os
 from warden.terminal import load_terminals
 from warden.detection import detect_trucks
 from warden.config import setup_logging, get_photo_memory, get_db_memory
+from warden.ocr import Tesseract
 
 
 def main() -> None:
@@ -15,6 +16,8 @@ def main() -> None:
                         help='Database type for truck detection results')
     parser.add_argument('--log-level', default='INFO', help='Logging level')
     parser.add_argument('--detect-trucks', action='store_true', help='Perform truck detection')
+    parser.add_argument('--ocr', choices=['tesseract', 'none'], default='tesseract',
+                        help='Choose what ocr to extract the timestamp')
     args = parser.parse_args()
 
     setup_logging(getattr(logging, args.log_level.upper()))
@@ -23,12 +26,13 @@ def main() -> None:
     photo_mem = get_photo_memory(args.storage)
     db_mem = get_db_memory(args.db)
     terminals = load_terminals(args.terminals, photo_mem)
+    ocr = None if args.ocr == 'none' else Tesseract()
 
     for terminal in terminals:
         logger.info(f"Processing Terminal: {terminal.name}")
         for camera in terminal.cameras:
             camera.get()
-            camera.save_last(with_timestamp=True)
+            camera.save_last(timestamp_reader=ocr)
             logger.info(f"Processed CAMERA: {camera.full_name}_{camera.last_timestamp}")
 
             if args.detect_trucks:

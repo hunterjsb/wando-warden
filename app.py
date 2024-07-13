@@ -10,6 +10,11 @@ import pytz
 from warden.terminal import load_terminals
 from warden.detection import detect_trucks
 from warden.config import get_photo_memory, get_db_memory
+from warden.ocr import Tesseract
+
+
+# TODO allowing switching timestamp readers
+tesseract = Tesseract()
 
 
 def main():
@@ -21,6 +26,9 @@ def main():
     storage_type = st.sidebar.selectbox("Storage Type", ["local", "s3"], index=1)
     db_type = st.sidebar.selectbox("Database Type", ["sqlite", "mysql", "postgres", "dynamodb"], index=3)
     detect_trucks_option = st.sidebar.checkbox("Detect Trucks", value=True)
+    ocr_option = st.sidebar.selectbox("OCR Timestamp Reader", ["tesseract", "none"])
+
+    ocr_option = None if ocr_option == "none" else tesseract  # see to do at top of file
 
     # Load terminals
     try:
@@ -40,7 +48,7 @@ def main():
             if st.button(f"Process {camera.full_name}"):
                 try:
                     camera.get()
-                    camera.save_last(with_timestamp=True)
+                    camera.save_last(timestamp_reader=ocr_option)
                     st.success(f"Processed CAMERA: {camera.full_name}_{camera.last_timestamp}")
 
                     if detect_trucks_option:

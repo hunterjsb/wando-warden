@@ -15,7 +15,8 @@ except ImportError:
     from yaml import Loader, Dumper
 
 from warden.memory import Memory
-from warden.ocr import extract_timestamp, to_snake_case
+from warden.ocr import TimestampReader
+from warden.utils import to_snake_case
 
 
 class Camera:
@@ -29,10 +30,10 @@ class Camera:
         # frame
         self.last_image: Optional[Image.Image] = None
         self.last_image_name = ''
-        self.last_timestamp: Optional[int] = None  # UNIX ms timestamp
-
-        self.last_ts_approx = False  # Did we use datetime.now() to approximate the timestamp?
         self._timestamp_box = timestamp_box  # coordinates are left, upper, right, bottom (PIL crop)
+
+        self.last_timestamp: Optional[int] = None  # UNIX ms timestamp
+        self.last_ts_approx = False  # Did we use datetime.now() to approximate the timestamp?
 
     @property
     def full_name(self) -> str:
@@ -54,23 +55,22 @@ class Camera:
         self.last_image = image
         return image
 
-    def save_last(self, with_timestamp=True):
+    def save_last(self, timestamp_reader: TimestampReader = None):
         """Save the `last_image` to memory"""
         if not self.last_image:
             raise AttributeError("missing last image, cannot save")
 
-        ts = 0
-        if with_timestamp:
+        self.last_ts_approx = True
+        self.last_timestamp = int(datetime.now(pytz.UTC).timestamp() * 1000)
+        if timestamp_reader:
             try:
-                ts = convert_est_to_utc_timestamp(extract_timestamp(self.timestamp_box))
+                self.last_timestamp = convert_est_to_utc_timestamp(timestamp_reader.read(self.timestamp_box))
+                self.last_ts_approx = False
             except (ValueError, TesseractNotFoundError) as e:
                 err_str = (f"encountered an error when extracting the timestamp, "
                            f"using current timestamp as _approx: {e}")
                 logging.log(logging.WARN, err_str)
-                ts = int(datetime.now(pytz.UTC).timestamp() * 1000)
-            self.last_timestamp = ts
-            self.last_ts_approx = True
-        self.last_image_name = f"{self.full_name}|{ts}|{self.last_ts_approx}.jpg"
+        self.last_image_name = f"{self.full_name}|{self.last_timestamp}|{self.last_ts_approx}.jpg"
         self.memory.save(self.last_image, self.last_image_name)
 
 
