@@ -13,7 +13,6 @@ from warden.config import get_photo_memory, get_db_memory
 from warden.ocr import Tesseract
 
 
-# TODO allowing switching timestamp readers
 tesseract = Tesseract()
 
 
@@ -28,7 +27,7 @@ def main():
     detect_trucks_option = st.sidebar.checkbox("Detect Trucks", value=True)
     ocr_option = st.sidebar.selectbox("OCR Timestamp Reader", ["tesseract", "none"])
 
-    ocr_option = None if ocr_option == "none" else tesseract  # see to do at top of file
+    ocr_option = None if ocr_option == "none" else tesseract
 
     # Load terminals
     try:
