@@ -9,6 +9,12 @@ wando-warden can watch terminal cameras (such as those at Wando Welch), read the
 - AI object detection using AWS Rekognition
 - Flexible storage options
 
+## Dashboard & Data Visualization
+wando-warden comes with a streamlit app that can be used to configure the app, manually scan cameras, and visualize the data.
+![graph](https://github.com/user-attachments/assets/f1f5009d-8594-4989-8363-8747b9912afb)
+
+
+## Architecture
 ![warden drawio](https://github.com/hunterjsb/wando-warden/assets/69213737/75644e94-cfb3-4127-afaa-b608f00740bf)
 
 
